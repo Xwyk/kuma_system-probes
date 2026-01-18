@@ -128,6 +128,71 @@ parse_fs_array() {
     done <<< "$fs_lines"
 }
 
+# Function to parse CMD array from JSON
+parse_cmd_array() {
+    local config_file="$1"
+    
+    # Initialize arrays
+    CMD_TOKENS=()
+    CMD_COMMANDS=()
+    CMD_GREP_PATTERNS=()
+    CMD_EXPECTED_VALUES=()
+    
+    # Extract lines between "cmd": [ and ]
+    local in_cmd=0
+    local cmd_lines=""
+    
+    while IFS= read -r line; do
+        # Check if we're entering the cmd array
+        if echo "$line" | grep -q '"cmd".*\['; then
+            in_cmd=1
+            continue
+        fi
+        
+        # Check if we're leaving the cmd array
+        if [[ $in_cmd -eq 1 ]] && echo "$line" | grep -q '^\s*\]'; then
+            break
+        fi
+        
+        # Accumulate lines while in cmd array
+        if [[ $in_cmd -eq 1 ]]; then
+            cmd_lines="$cmd_lines$line"$'\n'
+        fi
+    done < "$config_file"
+    
+    # Parse each CMD object
+    local idx=0
+    local current_token=""
+    local current_command=""
+    local current_grep=""
+    local current_expected=""
+    
+    while IFS= read -r line; do
+        if echo "$line" | grep -q '"token"'; then
+            current_token=$(echo "$line" | sed 's/.*"token"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+        elif echo "$line" | grep -q '"command"'; then
+            current_command=$(echo "$line" | sed 's/.*"command"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+        elif echo "$line" | grep -q '"grep_pattern"'; then
+            current_grep=$(echo "$line" | sed 's/.*"grep_pattern"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+        elif echo "$line" | grep -q '"expected"'; then
+            current_expected=$(echo "$line" | sed 's/.*"expected"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
+            
+            # We have all 4 values for this object, save them
+            CMD_TOKENS[$idx]="$current_token"
+            CMD_COMMANDS[$idx]="$current_command"
+            CMD_GREP_PATTERNS[$idx]="$current_grep"
+            CMD_EXPECTED_VALUES[$idx]="$current_expected"
+            ((idx++))
+            
+            # Reset for next object
+            current_token=""
+            current_command=""
+            current_grep=""
+            current_expected=""
+        fi
+    done <<< "$cmd_lines"
+}
+
 # Function to load configuration from JSON file
 load_config() {
     local config_file="$1"
@@ -163,6 +228,15 @@ load_config() {
     
     # Parse FS array (pass config file path, not content)
     parse_fs_array "$config_file"
+    
+    # Initialize CMD arrays
+    CMD_TOKENS=()
+    CMD_COMMANDS=()
+    CMD_GREP_PATTERNS=()
+    CMD_EXPECTED_VALUES=()
+    
+    # Parse CMD array
+    parse_cmd_array "$config_file"
 }
 
 # Parse command-line arguments
@@ -221,6 +295,13 @@ for i in "${!FS_TOKENS[@]}"; do
     echo "    Mount: ${FS_MOUNT_POINTS[$i]:-<not set>}"
     echo "    Threshold: ${FS_THRESHOLDS[$i]:-<not set>}"
 done
+echo ""
+echo "CMD Probes: ${#CMD_TOKENS[@]}"
+for i in "${!CMD_TOKENS[@]}"; do
+    echo "  CMD[$i]:"
+    echo "    Command: ${CMD_COMMANDS[$i]:-<not set>}"
+    echo "    Expected: ${CMD_EXPECTED_VALUES[$i]:-<not set>}"
+done
 echo "============================"
 
 # Execute probes
@@ -268,6 +349,24 @@ for i in "${!FS_TOKENS[@]}"; do
             "$SCRIPT_DIR/scripts/fs.sh" -d
         else
             "$SCRIPT_DIR/scripts/fs.sh"
+        fi
+    fi
+done
+
+# CMD Probes
+for i in "${!CMD_TOKENS[@]}"; do
+    if [[ -n "${CMD_TOKENS[$i]}" ]]; then
+        echo "Running CMD probe: ${CMD_COMMANDS[$i]}..."
+        export KUMA_URL="$URL"
+        export KUMA_TOKEN="${CMD_TOKENS[$i]}"
+        export COMMAND="${CMD_COMMANDS[$i]}"
+        export GREP_PATTERN="${CMD_GREP_PATTERNS[$i]}"
+        export EXPECTED_VALUE="${CMD_EXPECTED_VALUES[$i]}"
+        
+        if [[ $DRY_RUN -eq 1 ]]; then
+            "$SCRIPT_DIR/scripts/cmd.sh" -d
+        else
+            "$SCRIPT_DIR/scripts/cmd.sh"
         fi
     fi
 done

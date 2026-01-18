@@ -20,6 +20,14 @@
         "mount_point": "/data",
         "threshold": 95
       }
+    ],
+    "cmd": [
+      {
+        "token": "token_ssh_service",
+        "command": "systemctl status ssh",
+        "grep_pattern": "Active:",
+        "expected": "active"
+      }
     ]
   }
 }

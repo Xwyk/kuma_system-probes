@@ -40,7 +40,7 @@ MSG_ENC=$(echo "$MSG" | sed 's/%/%25/g;s/ /%20/g;s/:/%3A/g;s/,/%2C/g')
 
 # Push to Kuma
 if [ "${dry_run:-0}" -eq 1 ]; then
-    echo "CMD : ${KUMA_URL}/${KUMA_TOKEN}?status=${STATUS}&msg=${MSG_ENC}&ping="
+    echo "CMD : ${KUMA_URL}/api/push/${KUMA_TOKEN}?status=${STATUS}&msg=${MSG_ENC}&ping="
 else
-    curl -s "${KUMA_URL}/${KUMA_TOKEN}?status=${STATUS}&msg=${MSG_ENC}&ping=" > /dev/null
+    curl -s "${KUMA_URL}/api/push/${KUMA_TOKEN}?status=${STATUS}&msg=${MSG_ENC}&ping=" > /dev/null
 fi

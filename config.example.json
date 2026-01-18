@@ -1,0 +1,25 @@
+{
+  "url": "https://uptime.example.com",
+  "probes": {
+    "cpu": {
+      "token": "token_cpu_123456",
+      "threshold": 95
+    },
+    "ram": {
+      "token": "token_ram_789012",
+      "threshold": 95
+    },
+    "fs": [
+      {
+        "token": "token_fs_root",
+        "mount_point": "/",
+        "threshold": 90
+      },
+      {
+        "token": "token_fs_data",
+        "mount_point": "/data",
+        "threshold": 95
+      }
+    ]
+  }
+}

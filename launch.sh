@@ -19,7 +19,7 @@ usage() {
     echo "  -r, --ram VALUE     Set RAM threshold (or use RAM environment variable)"
     echo "  -f, --fs VALUE      Set filesystem threshold (or use FS environment variable)"
     echo "  -h, --help          Display this help message"
-    exit 1
+    exit "${1:-1}"
 }
 
 # Parse command-line arguments
@@ -62,11 +62,11 @@ while [[ $# -gt 0 ]]; do
             fi
             ;;
         -h|--help)
-            usage
+            usage 0
             ;;
         *)
             echo "Unknown option: $1"
-            usage
+            usage 1
             ;;
     esac
 done

@@ -27,7 +27,7 @@ fi
 MSG_ENC=$(echo "$MSG" | sed 's/%/%25/g;s/ /%20/g')
 
 if [ "${dry_run:-0}" -eq 1 ]; then
-  echo "RAM : ${KUMA_URL}/${KUMA_TOKEN}?status=${STATUS}&msg=${MSG_ENC}&ping=${RAM_USAGE}"
+  echo "RAM : ${KUMA_URL}/api/push/${KUMA_TOKEN}?status=${STATUS}&msg=${MSG_ENC}&ping=${RAM_USAGE}"
 else
-  curl -s "${KUMA_URL}/${KUMA_TOKEN}?status=${STATUS}&msg=${MSG_ENC}&ping=${RAM_USAGE}" > /dev/null
+  curl -s "${KUMA_URL}/api/push/${KUMA_TOKEN}?status=${STATUS}&msg=${MSG_ENC}&ping=${RAM_USAGE}" > /dev/null
 fi

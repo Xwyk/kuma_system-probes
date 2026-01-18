@@ -30,7 +30,7 @@ MSG_ENC=$(echo "$MSG" | sed 's/%/%25/g;s/ /%20/g')
 
 # push
 if [ "${dry_run:-0}" -eq 1 ]; then
-    echo "DISK : ${KUMA_URL}/${KUMA_TOKEN}?status=${STATUS}&msg=${MSG_ENC}&ping=${DISK_USAGE}"
+    echo "DISK : ${KUMA_URL}/api/push/${KUMA_TOKEN}?status=${STATUS}&msg=${MSG_ENC}&ping=${DISK_USAGE}"
 else
-    curl -s "${KUMA_URL}/${KUMA_TOKEN}?status=${STATUS}&msg=${MSG_ENC}&ping=${DISK_USAGE}" > /dev/null
+    curl -s "${KUMA_URL}/api/push/${KUMA_TOKEN}?status=${STATUS}&msg=${MSG_ENC}&ping=${DISK_USAGE}" > /dev/null
 fi
